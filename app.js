@@ -1,4 +1,7 @@
-const STORAGE_KEY = "measurefit_v2";
+const APP_VERSION = "1.0.0";
+const DATA_VERSION = 1;
+const STORAGE_KEY = "measurefit_data";
+const LEGACY_KEYS = ["measurefit_v2", "measurefit_v1"];
 
 const labels = {
   chest:"Brust", waist:"Taille", hips:"Hüfte", armLeft:"Oberarm L", armRight:"Oberarm R",
@@ -68,10 +71,13 @@ const banks = {
   intermediate: ["Tempo Squat","Split Squat","Push-up","Plank","Mountain Climbers","Good Morning","Side Plank","Calf Raises"]
 };
 
-const state = load();
+let state = loadAppState();
 
-function defaultState() {
+function createDefaultState() {
   return {
+    appVersion: APP_VERSION,
+    dataVersion: DATA_VERSION,
+    profile: {},
     measurements: [],
     settings: {
       goal:"painfree", monthlyFocus:"consistency", level:"beginner", minutes:30,
@@ -79,17 +85,103 @@ function defaultState() {
     },
     plans: {},
     completions: {},
-    feedback: []
+    feedback: [],
+    meta: {
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      migratedFrom: null
+    }
   };
 }
-function load() {
-  try { return Object.assign(defaultState(), JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}); }
-  catch { return defaultState(); }
+
+function normalizeState(raw, migratedFrom = null) {
+  const base = createDefaultState();
+  const normalized = {
+    ...base,
+    ...raw,
+    appVersion: APP_VERSION,
+    dataVersion: DATA_VERSION,
+    profile: raw?.profile || {},
+    measurements: Array.isArray(raw?.measurements) ? raw.measurements : [],
+    settings: { ...base.settings, ...(raw?.settings || raw?.goals || {}) },
+    plans: raw?.plans || {},
+    completions: raw?.completions || {},
+    feedback: Array.isArray(raw?.feedback) ? raw.feedback : [],
+    meta: {
+      ...base.meta,
+      ...(raw?.meta || {}),
+      migratedFrom: migratedFrom || raw?.meta?.migratedFrom || null,
+      updatedAt: new Date().toISOString()
+    }
+  };
+
+  // Legacy compatibility: v1/v2 used settings.days, but older variants may not.
+  if (!Array.isArray(normalized.settings.days) || normalized.settings.days.length === 0) {
+    normalized.settings.days = ["1","3","5"];
+  }
+  normalized.settings.days = normalized.settings.days.map(String);
+
+  // Remove body values intentionally discontinued from active UI, but preserve old data fields if present.
+  return normalized;
 }
+
+function loadAppState() {
+  const current = readJSON(STORAGE_KEY);
+  if (current) {
+    const migrated = migrateState(current);
+    persist(migrated);
+    return migrated;
+  }
+
+  for (const key of LEGACY_KEYS) {
+    const legacy = readJSON(key);
+    if (legacy) {
+      const migrated = migrateState(normalizeState(legacy, key));
+      persist(migrated);
+      return migrated;
+    }
+  }
+
+  const fresh = createDefaultState();
+  persist(fresh);
+  return fresh;
+}
+
+function readJSON(key) {
+  try {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : null;
+  } catch {
+    return null;
+  }
+}
+
+function migrateState(input) {
+  let data = normalizeState(input, input?.meta?.migratedFrom);
+
+  // Future migrations will be added here:
+  // if (data.dataVersion < 2) data = migrateV1ToV2(data);
+  // if (data.dataVersion < 3) data = migrateV2ToV3(data);
+
+  data.dataVersion = DATA_VERSION;
+  data.appVersion = APP_VERSION;
+  data.meta.updatedAt = new Date().toISOString();
+  return data;
+}
+
+function persist(data = state) {
+  data.appVersion = APP_VERSION;
+  data.dataVersion = DATA_VERSION;
+  data.meta = data.meta || {};
+  data.meta.updatedAt = new Date().toISOString();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
 function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  persist(state);
   render();
 }
+
 function todayISO(){ return new Date().toISOString().slice(0,10); }
 function monthKey(){ return new Date().toISOString().slice(0,7); }
 function dayOfYear(){ const n = new Date(); const s = new Date(n.getFullYear(),0,0); return Math.floor((n-s)/86400000); }
@@ -106,7 +198,10 @@ function switchScreen(id) {
 
 function currentPlan() {
   const key = monthKey();
-  if (!state.plans[key]) state.plans[key] = generatePlan();
+  if (!state.plans[key]) {
+    state.plans[key] = generatePlan();
+    persist(state);
+  }
   return state.plans[key];
 }
 
@@ -159,6 +254,7 @@ function render() {
   renderWorkouts();
   renderSettings();
 }
+
 function renderQuote() {
   const q = quotes[dayOfYear() % quotes.length];
   document.getElementById("dailyQuote").textContent = q[0];
@@ -166,6 +262,7 @@ function renderQuote() {
   document.getElementById("dailyChallenge").textContent = challenges[dayOfYear() % challenges.length];
   document.getElementById("challengeCheck").checked = !!state.completions[`challenge_${todayISO()}`];
 }
+
 function renderOverview() {
   document.getElementById("totalEntries").textContent = `${state.measurements.length} Einträge`;
   const stats = calcOverallStats();
@@ -179,6 +276,7 @@ function renderOverview() {
   renderTodayWorkout();
   renderWeekStrip();
 }
+
 function calcOverallStats() {
   const sorted = sortedMeasurements();
   let cmChange = "–", cmClass = "";
@@ -188,19 +286,21 @@ function calcOverallStats() {
     cmChange = `${diff > 0 ? "+" : ""}${diff.toFixed(1)} cm`;
     cmClass = diff <= 0 ? "positive" : "negative";
   }
-  const completedKeys = Object.keys(state.completions);
+  const completedKeys = Object.keys(state.completions || {});
   const workouts = completedKeys.filter(k => k.startsWith("workout_") && state.completions[k] === true).length;
   const challengesDone = completedKeys.filter(k => k.startsWith("challenge_") && state.completions[k] === true).length;
   const fat = changeFor("bodyFat", "%");
   const muscle = changeFor("muscle", "kg");
   return { cmChange, cmClass, workouts, challenges: challengesDone, fat, muscle };
 }
+
 function changeFor(field, unit) {
   const sorted = sortedMeasurements().filter(x => x[field]);
   if (sorted.length < 2) return "–";
   const diff = Number(sorted[sorted.length-1][field]) - Number(sorted[0][field]);
   return `${diff > 0 ? "+" : ""}${diff.toFixed(1)} ${unit}`;
 }
+
 function renderTodayWorkout() {
   const today = String(new Date().getDay());
   const plan = currentPlan();
@@ -227,6 +327,7 @@ function renderTodayWorkout() {
     <button class="primary complete-workout">Training abschließen</button>
   `;
 }
+
 function renderWeekStrip() {
   const names = ["So","Mo","Di","Mi","Do","Fr","Sa"];
   const today = new Date().getDay();
@@ -236,6 +337,7 @@ function renderWeekStrip() {
       <div>${n}</div><small>${days.includes(String(i))?"🏋🏽":"🌿"}</small>
     </div>`).join("");
 }
+
 function renderBody() {
   const form = document.getElementById("bodyForm");
   if (!form.elements.date.value) form.elements.date.value = todayISO();
@@ -243,6 +345,7 @@ function renderBody() {
   renderWeightStats();
   renderHistory();
 }
+
 function updateDiffHints() {
   const last = sortedMeasurements().at(-1);
   document.querySelectorAll("[data-diff]").forEach(el => {
@@ -256,6 +359,7 @@ function updateDiffHints() {
     el.className = diff <= 0 && ["waist","hips","chest","armLeft","armRight","thighLeft","thighRight","calfLeft","calfRight","weight","bodyFat"].includes(f) ? "positive" : "";
   });
 }
+
 function renderWeightStats() {
   const values = sortedMeasurements().filter(x=>x.weight);
   const box = document.getElementById("weightStats");
@@ -279,6 +383,7 @@ function renderWeightStats() {
     return `<div class="bar" title="${w} kg" style="height:${h}px"></div>`;
   }).join("");
 }
+
 function renderHistory() {
   const list = document.getElementById("historyList");
   const sorted = sortedMeasurements().reverse();
@@ -297,6 +402,7 @@ function renderHistory() {
     </div>
   `).join("");
 }
+
 function renderWorkouts() {
   const plan = currentPlan();
   const weekdayNames = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
@@ -310,6 +416,7 @@ function renderWorkouts() {
     </div>
   `).join("");
 }
+
 function exerciseHTML(name) {
   const info = exerciseInfo[name] || ["✦", "Führe die Übung kontrolliert aus und achte auf saubere Technik.", "Passe Tempo und Bewegungsradius an dein Körpergefühl an."];
   return `<details class="exercise-card">
@@ -318,6 +425,7 @@ function exerciseHTML(name) {
     <p><strong>Anpassung:</strong> ${info[2]}</p>
   </details>`;
 }
+
 function renderSettings() {
   const form = document.getElementById("settingsForm");
   const s = state.settings;
@@ -327,9 +435,47 @@ function renderSettings() {
   });
   form.querySelectorAll('input[name="days"]').forEach(cb => cb.checked = (s.days || []).includes(cb.value));
 }
+
+function exportBackup() {
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    source: "MeasureFit",
+    appVersion: APP_VERSION,
+    dataVersion: DATA_VERSION,
+    data: state
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `measurefit-backup-${todayISO()}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importBackup(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = event => {
+    try {
+      const parsed = JSON.parse(event.target.result);
+      const imported = parsed.data || parsed;
+      const migrated = migrateState(imported);
+      state = migrated;
+      persist(state);
+      alert("Backup wurde erfolgreich importiert.");
+      render();
+      switchScreen("overview");
+    } catch {
+      alert("Das Backup konnte nicht gelesen werden. Bitte prüfe die JSON-Datei.");
+    }
+  };
+  reader.readAsText(file);
+}
+
 function escapeHTML(str){ return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
 
 document.querySelectorAll(".nav-item").forEach(btn => btn.addEventListener("click", () => switchScreen(btn.dataset.screen)));
+
 document.addEventListener("change", e => {
   if (e.target.matches("#challengeCheck")) {
     state.completions[`challenge_${todayISO()}`] = e.target.checked;
@@ -337,19 +483,23 @@ document.addEventListener("change", e => {
   }
   if (e.target.matches(".exercise-check")) {
     state.completions[e.target.dataset.key] = e.target.checked;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    persist(state);
   }
   if (e.target.closest("#bodyForm")) updateDiffHints();
+  if (e.target.matches("#importData")) importBackup(e.target.files[0]);
 });
+
 document.addEventListener("input", e => {
   if (e.target.closest("#bodyForm")) updateDiffHints();
 });
+
 document.addEventListener("click", e => {
   if (e.target.matches(".complete-workout")) {
     state.completions[`workout_${todayISO()}`] = true;
     save();
   }
 });
+
 document.getElementById("bodyForm").addEventListener("submit", e => {
   e.preventDefault();
   const data = Object.fromEntries(new FormData(e.target).entries());
@@ -361,6 +511,7 @@ document.getElementById("bodyForm").addEventListener("submit", e => {
   save();
   switchScreen("overview");
 });
+
 document.getElementById("settingsForm").addEventListener("submit", e => {
   e.preventDefault();
   const fd = new FormData(e.target);
@@ -378,30 +529,33 @@ document.getElementById("settingsForm").addEventListener("submit", e => {
   save();
   switchScreen("overview");
 });
+
 document.querySelectorAll(".feedback").forEach(btn => btn.addEventListener("click", () => {
   state.feedback.push({date: todayISO(), effort: btn.dataset.effort});
   state.plans[monthKey()] = generatePlan();
   save();
   alert("Danke. Dein nächster Plan wird daran angepasst.");
 }));
+
 document.getElementById("regeneratePlan").addEventListener("click", () => {
   state.plans[monthKey()] = generatePlan();
   save();
 });
-document.getElementById("exportData").addEventListener("click", () => {
-  const blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `measurefit-export-${todayISO()}.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-});
+
+document.getElementById("exportData").addEventListener("click", exportBackup);
+document.getElementById("exportDataSettings").addEventListener("click", exportBackup);
+
 document.getElementById("clearData").addEventListener("click", () => {
-  if (confirm("Alle lokalen Daten wirklich löschen?")) {
+  if (confirm("Alle lokalen Daten wirklich löschen? Bitte vorher ein Backup erstellen, falls du sie behalten möchtest.")) {
     localStorage.removeItem(STORAGE_KEY);
     location.reload();
   }
 });
+
 document.querySelector('#bodyForm [name="date"]').value = todayISO();
-if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
+}
+
 render();

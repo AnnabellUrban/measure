@@ -1,7 +1,7 @@
 {
   "name": "MeasureFit",
   "short_name": "MeasureFit",
-  "description": "Körpermaß-fokussiertes Tracking und adaptive Homeworkouts.",
+  "description": "MeasureFit: stabile PWA-Grundlage mit körpermaß-fokussiertem Tracking, Backups und adaptiven Homeworkouts.",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#fff7fa",

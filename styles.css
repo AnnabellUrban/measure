@@ -431,3 +431,30 @@ legend {
 .hotspot {
   display: none !important;
 }
+
+
+/* v4 stable data foundation */
+.data-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+}
+.import-label {
+  background: #fff;
+  color: var(--primary);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 13px 16px;
+  font-weight: 900;
+  text-align: center;
+  cursor: pointer;
+}
+.import-label input {
+  display: none;
+}
+@media (max-width: 520px) {
+  .data-actions {
+    grid-template-columns: 1fr;
+  }
+}

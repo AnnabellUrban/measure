@@ -300,7 +300,13 @@
 
         <article class="card danger-zone">
           <h2>Datenverwaltung</h2>
-          <p class="muted">Alle Daten werden lokal auf diesem Gerät gespeichert.</p>
+          <p class="muted">Alle Daten werden lokal auf diesem Gerät gespeichert. Erstelle vor größeren Updates am besten ein Backup.</p>
+          <div class="data-actions">
+            <button id="exportDataSettings" class="secondary" type="button">Backup erstellen</button>
+            <label class="import-label">Backup importieren
+              <input id="importData" type="file" accept="application/json">
+            </label>
+          </div>
           <button id="clearData" class="danger">Alle lokalen Daten löschen</button>
         </article>
       </section>

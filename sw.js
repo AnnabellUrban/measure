@@ -1,4 +1,4 @@
-const CACHE_NAME = "measurefit-v3-cache";
+const CACHE_NAME = "measurefit-v4-cache";
 const ASSETS = ["./", "index.html", "styles.css", "app.js", "manifest.json", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", event => {
