@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f28fb3">
+  <meta name="description" content="MeasureFit: Körpermaß-fokussiertes Tracking und adaptive Homeworkouts.">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+  <title>MeasureFit</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="top-quote">
+      <p class="eyebrow">MeasureFit</p>
+      <h1 id="dailyQuote">Du tust es für mehr Leichtigkeit.</h1>
+      <p id="dailySubquote">Heute zählt, was deinem Körper guttut.</p>
+    </header>
+
+    <main>
+      <section id="overview" class="screen active">
+        <article class="card progress-hero">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Gesamtfortschritt</p>
+              <h2>Deine Entwicklung</h2>
+            </div>
+            <span class="pill" id="totalEntries">0 Einträge</span>
+          </div>
+          <div class="progress-layout">
+            <div class="silhouette-wrap" aria-hidden="true">
+              <div class="aura"></div>
+              <svg class="woman-progress pretty-silhouette" viewBox="0 0 260 380" role="img" aria-label="Elegante Frauensilhouette">
+                <defs>
+                  <linearGradient id="softBody" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#ffd8e7"/>
+                    <stop offset="52%" stop-color="#f49abd"/>
+                    <stop offset="100%" stop-color="#d9437f"/>
+                  </linearGradient>
+                  <linearGradient id="softLine" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#ffffff"/>
+                    <stop offset="100%" stop-color="#ffd8e7"/>
+                  </linearGradient>
+                </defs>
+                <path d="M130 24 C100 26 82 49 86 78 C88 100 105 113 130 113 C155 113 172 100 174 78 C178 49 160 26 130 24Z" fill="url(#softBody)" opacity=".95"/>
+                <path d="M130 118 C97 126 80 153 76 194 C72 236 91 254 91 303 C91 338 74 356 95 365 C113 373 121 335 130 292 C139 335 147 373 165 365 C186 356 169 338 169 303 C169 254 188 236 184 194 C180 153 163 126 130 118Z" fill="url(#softBody)" opacity=".88"/>
+                <path d="M89 155 C55 181 50 237 68 280" stroke="url(#softBody)" stroke-width="16" stroke-linecap="round" opacity=".38" fill="none"/>
+                <path d="M171 155 C205 181 210 237 192 280" stroke="url(#softBody)" stroke-width="16" stroke-linecap="round" opacity=".38" fill="none"/>
+                <path d="M112 128 C126 170 125 220 104 269" stroke="url(#softLine)" stroke-width="5" stroke-linecap="round" opacity=".68" fill="none"/>
+                <path d="M148 128 C134 170 135 220 156 269" stroke="url(#softLine)" stroke-width="5" stroke-linecap="round" opacity=".5" fill="none"/>
+                <path d="M88 214 C111 229 149 229 172 214" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".65" fill="none"/>
+              </svg>
+            </div>
+            <div class="stat-grid" id="overallStats"></div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Heute</p>
+              <h2 id="todayTitle">Dein Tag</h2>
+            </div>
+            <span class="pill" id="todayPill"></span>
+          </div>
+          <div id="todayWorkout" class="today-box"></div>
+        </article>
+
+        <article class="card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Alltagschallenge</p>
+              <h2>Kleine Aufgabe, große Wirkung</h2>
+            </div>
+            <span class="pill">täglich</span>
+          </div>
+          <label class="challenge-card">
+            <input type="checkbox" id="challengeCheck">
+            <span id="dailyChallenge">10 Minuten spazieren gehen.</span>
+          </label>
+        </article>
+
+        <article class="card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Woche</p>
+              <h2>Dein Rhythmus</h2>
+            </div>
+          </div>
+          <div class="week-strip" id="weekStrip"></div>
+        </article>
+      </section>
+
+      <section id="body" class="screen">
+        <article class="card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Body</p>
+              <h2>Neue Messung</h2>
+            </div>
+            <span class="pill">cm zuerst</span>
+          </div>
+          <p class="muted">Trage deine Körpermaße ein. Die Veränderung zur letzten Messung erscheint direkt unter dem jeweiligen Wert.</p>
+          <form id="bodyForm" class="body-form">
+            <label class="date-field">Datum
+              <input type="date" name="date" required>
+            </label>
+
+            <div class="body-layout">
+              <div class="body-map pretty-body-card">
+                <svg viewBox="0 0 280 440" class="body-svg pretty-body-svg" aria-label="Elegante Körpersilhouette">
+                  <defs>
+                    <linearGradient id="bodySoftPink" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stop-color="#fff1f7"/>
+                      <stop offset="45%" stop-color="#ffc6dc"/>
+                      <stop offset="100%" stop-color="#e45b91"/>
+                    </linearGradient>
+                    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#b82463" flood-opacity=".18"/>
+                    </filter>
+                  </defs>
+                  <ellipse cx="140" cy="398" rx="74" ry="12" fill="#d9437f" opacity=".10"/>
+                  <g filter="url(#softShadow)">
+                    <path d="M140 28 C106 30 87 55 91 86 C94 111 112 125 140 125 C168 125 186 111 189 86 C193 55 174 30 140 28Z" fill="url(#bodySoftPink)"/>
+                    <path d="M140 133 C103 141 85 172 82 214 C79 258 101 278 98 326 C96 365 80 389 104 399 C124 408 131 362 140 316 C149 362 156 408 176 399 C200 389 184 365 182 326 C179 278 201 258 198 214 C195 172 177 141 140 133Z" fill="url(#bodySoftPink)" opacity=".96"/>
+                    <path d="M95 176 C58 207 55 267 74 314" stroke="#ffc6dc" stroke-width="18" stroke-linecap="round" opacity=".72" fill="none"/>
+                    <path d="M185 176 C222 207 225 267 206 314" stroke="#ffc6dc" stroke-width="18" stroke-linecap="round" opacity=".72" fill="none"/>
+                  </g>
+                  <path d="M118 143 C132 190 131 246 111 303" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".72" fill="none"/>
+                  <path d="M162 143 C148 190 149 246 169 303" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".54" fill="none"/>
+                  <path d="M93 239 C119 255 161 255 187 239" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".72" fill="none"/>
+                  <path d="M104 177 C123 187 157 187 176 177" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".58" fill="none"/>
+                </svg>
+              </div>
+
+              <div class="measurement-grid">
+                <label>Brust <input type="number" step="0.1" name="chest"><small data-diff="chest"></small></label>
+                <label>Taille <input type="number" step="0.1" name="waist"><small data-diff="waist"></small></label>
+                <label>Hüfte <input type="number" step="0.1" name="hips"><small data-diff="hips"></small></label>
+                <label>Oberarm links <input type="number" step="0.1" name="armLeft"><small data-diff="armLeft"></small></label>
+                <label>Oberarm rechts <input type="number" step="0.1" name="armRight"><small data-diff="armRight"></small></label>
+                <label>Oberschenkel links <input type="number" step="0.1" name="thighLeft"><small data-diff="thighLeft"></small></label>
+                <label>Oberschenkel rechts <input type="number" step="0.1" name="thighRight"><small data-diff="thighRight"></small></label>
+                <label>Wade links <input type="number" step="0.1" name="calfLeft"><small data-diff="calfLeft"></small></label>
+                <label>Wade rechts <input type="number" step="0.1" name="calfRight"><small data-diff="calfRight"></small></label>
+              </div>
+            </div>
+
+            <h3>Weitere Werte</h3>
+            <div class="measurement-grid secondary-values">
+              <label>Gewicht kg <input type="number" step="0.1" name="weight"><small data-diff="weight"></small></label>
+              <label>Größe cm <input type="number" step="0.1" name="height"></label>
+              <label>Körperfett % <input type="number" step="0.1" name="bodyFat"><small data-diff="bodyFat"></small></label>
+              <label>Wasser % <input type="number" step="0.1" name="water"><small data-diff="water"></small></label>
+              <label>Muskelmasse kg <input type="number" step="0.1" name="muscle"><small data-diff="muscle"></small></label>
+            </div>
+            <label>Notiz
+              <textarea name="note" rows="3" placeholder="Schmerzen, Schwellung, Energie, Schlaf, Besonderheiten ..."></textarea>
+            </label>
+            <button class="primary" type="submit">Messung speichern</button>
+          </form>
+        </article>
+
+        <article class="card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Gewichtsstatistik</p>
+              <h2>Nur als Zusatzwert</h2>
+            </div>
+          </div>
+          <div id="weightStats" class="stat-grid"></div>
+          <div id="weightChart" class="mini-chart"></div>
+        </article>
+
+        <article class="card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Verlauf</p>
+              <h2>Messungen</h2>
+            </div>
+            <button id="exportData" class="secondary">Export</button>
+          </div>
+          <div id="historyList" class="history-list"></div>
+        </article>
+      </section>
+
+      <section id="workouts" class="screen">
+        <article class="card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Workouts</p>
+              <h2>Dein Monatsplan</h2>
+            </div>
+            <button id="regeneratePlan" class="secondary">Neu generieren</button>
+          </div>
+          <div id="workoutPlan" class="workout-list"></div>
+        </article>
+      </section>
+
+      <section id="settings" class="screen">
+        <article class="card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Einstellungen</p>
+              <h2>Ziele & Trainingssteuerung</h2>
+            </div>
+          </div>
+          <form id="settingsForm" class="settings-form">
+            <label>Hauptziel
+              <select name="goal">
+                <option value="fatloss">Umfang reduzieren & Fettverlust unterstützen</option>
+                <option value="tone">Straffer werden</option>
+                <option value="fitness">Fitter und belastbarer werden</option>
+                <option value="muscle">Muskulatur aufbauen</option>
+                <option value="painfree">Mehr Beweglichkeit & schmerzärmerer Alltag</option>
+              </select>
+            </label>
+            <label>Monatsschwerpunkt
+              <select name="monthlyFocus">
+                <option value="consistency">Routine aufbauen</option>
+                <option value="lowerbody">Beine & Po stärken</option>
+                <option value="core">Core & Haltung verbessern</option>
+                <option value="mobility">Mobility & Regeneration</option>
+                <option value="endurance">Mehr Ausdauer im Alltag</option>
+                <option value="progression">Intensität steigern</option>
+              </select>
+            </label>
+            <label>Fitnesslevel
+              <select name="level">
+                <option value="beginner">Anfängerin / Anfänger</option>
+                <option value="returning">Wiedereinstieg</option>
+                <option value="intermediate">Fortgeschritten</option>
+              </select>
+            </label>
+            <label>Minuten pro Training
+              <input type="number" min="10" max="90" step="5" name="minutes" value="30">
+            </label>
+            <label>Equipment
+              <select name="equipment">
+                <option value="none">Kein Equipment</option>
+                <option value="bands">Widerstandsband</option>
+                <option value="dumbbells">Kurzhanteln</option>
+                <option value="mixed">Gemischt</option>
+              </select>
+            </label>
+            <label>Einschränkungen
+              <select name="limitations">
+                <option value="none">Keine</option>
+                <option value="knees">Knie schonen</option>
+                <option value="back">Rücken schonen</option>
+                <option value="lowimpact">Low Impact</option>
+                <option value="swelling">Schwellung / schwere Beine berücksichtigen</option>
+              </select>
+            </label>
+            <label>Grundintensität
+              <select name="intensity">
+                <option value="gentle">Sanft</option>
+                <option value="balanced">Ausgewogen</option>
+                <option value="strong">Kräftigend</option>
+              </select>
+            </label>
+
+            <fieldset>
+              <legend>Trainingstage</legend>
+              <div class="weekday-grid">
+                <label><input type="checkbox" name="days" value="1"> Mo</label>
+                <label><input type="checkbox" name="days" value="2"> Di</label>
+                <label><input type="checkbox" name="days" value="3"> Mi</label>
+                <label><input type="checkbox" name="days" value="4"> Do</label>
+                <label><input type="checkbox" name="days" value="5"> Fr</label>
+                <label><input type="checkbox" name="days" value="6"> Sa</label>
+                <label><input type="checkbox" name="days" value="0"> So</label>
+              </div>
+            </fieldset>
+
+            <button class="primary" type="submit">Einstellungen speichern</button>
+          </form>
+        </article>
+
+        <article class="card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Training anpassen</p>
+              <h2>War es zu leicht?</h2>
+            </div>
+          </div>
+          <p class="muted">Deine Rückmeldung beeinflusst den nächsten generierten Plan.</p>
+          <div class="feedback-grid">
+            <button class="feedback" data-effort="tooEasy">😊 Zu leicht</button>
+            <button class="feedback" data-effort="right">🙂 Genau richtig</button>
+            <button class="feedback" data-effort="hard">😮‍💨 Anstrengend</button>
+            <button class="feedback" data-effort="tooHard">🥵 Zu schwer</button>
+          </div>
+        </article>
+
+        <article class="notice">
+          <strong>Hinweis:</strong> Die App ersetzt keine medizinische Beratung. Bei Schmerzen, Schwangerschaft, Erkrankungen oder Unsicherheit bitte ärztlich abklären, welche Bewegung geeignet ist.
+        </article>
+
+        <article class="card danger-zone">
+          <h2>Datenverwaltung</h2>
+          <p class="muted">Alle Daten werden lokal auf diesem Gerät gespeichert.</p>
+          <button id="clearData" class="danger">Alle lokalen Daten löschen</button>
+        </article>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Hauptnavigation">
+      <button class="nav-item active" data-screen="overview" aria-label="Übersicht">
+        <span class="icon">⌂</span><span>Übersicht</span>
+      </button>
+      <button class="nav-item" data-screen="body" aria-label="Body">
+        <span class="icon">♡</span><span>Body</span>
+      </button>
+      <button class="nav-item" data-screen="workouts" aria-label="Workouts">
+        <span class="icon">✦</span><span>Workouts</span>
+      </button>
+      <button class="nav-item" data-screen="settings" aria-label="Einstellungen">
+        <span class="icon">⚙</span><span>Einstellungen</span>
+      </button>
+    </nav>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

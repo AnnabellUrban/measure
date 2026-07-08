@@ -1,6 +1,6 @@
 # MeasureFit PWA – Version 2
 
-## Neu in dieser Version
+## Neu in Version 3
 
 - Fixierte Bottom-Navigation mit Icons
 - Unterseiten: Übersicht, Body, Workouts, Einstellungen
@@ -38,3 +38,10 @@ http://localhost:8080
 Geeignet für GitHub Pages, Netlify, Vercel oder Cloudflare Pages.
 
 Auf dem iPhone in Safari öffnen → Teilen → Zum Home-Bildschirm.
+
+## Version 3 Anpassungen
+
+- Schönere, nicht-interaktive Silhouetten
+- Wochenübersicht mit Emojis statt abgeschnittenem Text
+- Entfernte Zusatztexte unter den Silhouetten
+- Neuer Service-Worker-Cache: measurefit-v3-cache
