@@ -1,7 +1,7 @@
 {
   "name": "MeasureFit",
   "short_name": "MeasureFit",
-  "description": "MeasureFit: stabile PWA-Grundlage mit körpermaß-fokussiertem Tracking, Backups und adaptiven Homeworkouts.",
+  "description": "MeasureFit: update-sichere PWA mit lokalem Backup, körpermaß-fokussiertem Tracking und adaptiven Homeworkouts.",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#fff7fa",

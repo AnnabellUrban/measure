@@ -1,79 +1,68 @@
-# MeasureFit PWA – Version 4 / stabile Grundlage
+# MeasureFit PWA – Version 5 / Update-sichere Grundlage
 
-Diese Version ist die neue technische Basis für zukünftige Updates.
+Diese Version verbessert den PWA-Update-Mechanismus, damit du nach Updates nicht jedes Mal Safari-Websitedaten löschen musst.
 
-## Wichtigste Änderung
+## Wichtig
 
-Die App speichert Daten jetzt unter einem stabilen Schlüssel:
+Deine persönlichen Daten liegen weiterhin lokal auf deinem Gerät unter:
 
 ```text
 measurefit_data
 ```
 
-Die Daten enthalten außerdem:
+Sie werden nicht gelöscht, wenn du Dateien auf GitHub ersetzt.
 
-```json
-{
-  "appVersion": "1.0.0",
-  "dataVersion": 1
-}
-```
+## Neu in Version 5
 
-Damit können spätere Versionen Daten automatisch migrieren, ohne dass Einträge verloren gehen.
-
-## Automatische Übernahme alter Daten
-
-Beim ersten Start prüft die App:
-
-1. Gibt es bereits neue Daten unter `measurefit_data`?
-2. Falls nicht: Gibt es alte Daten unter `measurefit_v2` oder `measurefit_v1`?
-3. Falls ja: Diese Daten werden automatisch in das neue Format übernommen.
-
-## Backup
-
-In den Einstellungen gibt es jetzt:
-
+- stabiler Datenspeicher `measurefit_data`
+- Datenversion `dataVersion: 1`
+- App-Version `appVersion: 1.0.1`
+- automatische Übernahme alter v2/v3/v4-Daten
 - Backup erstellen
 - Backup importieren
+- neuer Service Worker `measurefit-v5-cache`
+- automatische Löschung alter MeasureFit-Caches
+- Update-Hinweis in der App
+- Button „Aktualisieren“, ohne lokale Daten zu löschen
+- HTML wird network-first geladen, damit GitHub-Updates schneller sichtbar werden
+- statische Dateien werden weiterhin offlinefähig gecacht
 
-Vor größeren Updates empfiehlt sich ein Backup.
+## So aktualisierst du künftig
 
-## Enthaltene Funktionen
+1. Neue Dateien auf GitHub hochladen und alte ersetzen.
+2. App/Safari öffnen.
+3. Falls eine neue Version erkannt wird, erscheint ein Hinweis.
+4. Auf „Aktualisieren“ tippen.
+5. Die App lädt neu, deine Daten bleiben erhalten.
 
-- Bottom-Navigation
-- Übersicht mit täglichem Spruch
-- Gesamtfortschritt
-- Trainingstag-Erkennung über Wochentage
-- Tageschallenge
-- Body-Seite mit schöner Silhouette
-- Messwerte und Veränderung seit letzter Messung
-- Gewichtsstatistik
-- Workouts mit Übungserklärungen
-- Einstellungen mit Trainingssteuerung
-- Intensitätsfeedback
-- Lokaler Speicher
-- PWA-Manifest und Service Worker
+## Vor größeren Updates
 
-## Update-Hinweis
+Trotzdem empfohlen:
 
-Wenn nach dem Hochladen auf GitHub noch die alte Version erscheint, liegt es meistens am Safari-/PWA-Cache.
+Einstellungen → Backup erstellen
 
-Diese Version nutzt:
+## GitHub-Struktur
 
-```text
-measurefit-v4-cache
-```
-
-Falls Safari trotzdem alte Dateien zeigt: Websitedaten löschen oder die PWA vom Home-Bildschirm entfernen und neu hinzufügen.
-
-## Lokal testen
-
-```bash
-python3 -m http.server 8080
-```
-
-Dann öffnen:
+Alle Dateien im Hauptordner:
 
 ```text
-http://localhost:8080
+/
+├── index.html
+├── styles.css
+├── app.js
+├── manifest.json
+├── sw.js
+├── README.md
+├── icon-192.png
+└── icon-512.png
 ```
+
+## Falls doch einmal alte Versionen hängen
+
+Nicht sofort Websitedaten löschen. Erst:
+
+1. App komplett schließen und neu öffnen.
+2. Safari-Seite neu laden.
+3. 1–2 Minuten warten und erneut öffnen.
+4. Backup erstellen, falls möglich.
+5. Erst danach als letzte Option Websitedaten löschen.
